@@ -169,4 +169,4 @@ fi
 rm -f ~/.config/vlc/vlc-qt-interface.conf
 
 # Launch VLC with selected parameters
-vlc v4l2://$VIDEO_DEVICE --v4l2-width=$WIDTH --v4l2-height=$HEIGHT --v4l2-chroma=NV12 $COLOR_ADJUST :input-slave=alsa://$AUDIO_DEVICE :live-caching=20 :v4l2-caching=20 :alsa-caching=20 --qt-minimal-view --meta-title="$TITLE"
+vlc v4l2://$VIDEO_DEVICE --v4l2-width=$WIDTH --v4l2-height=$HEIGHT --v4l2-chroma=NV12 $COLOR_ADJUST :input-slave=alsa://$AUDIO_DEVICE :live-caching=20 --qt-minimal-view --meta-title="$TITLE"
