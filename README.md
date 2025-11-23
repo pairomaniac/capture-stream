@@ -1,6 +1,6 @@
-# Elgato VLC Capture Script
+# VLC Capture Script for easier Discord sharing
 
-A Bash script to make Discord capture card streaming easier on Linux, since the built-in functionality is broken.
+A Bash script to make Discord capture card streaming easier on Linux, since the built-in functionality is broken. Only tested with Elgato HD60 X - check **Adapting for Other Capture Cards** for other uses.
 
 ## Features
 
