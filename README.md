@@ -1,6 +1,10 @@
 # VLC Capture Stream
 
 A Bash script for low-latency capture card streaming on Linux/KDE. Designed for sharing capture card output via Discord screen share, since Discord's built-in capture is broken on Linux.
+<p float="left">
+  <img src="https://github.com/user-attachments/assets/294310a4-d5e7-4a2d-ac44-b6654b89bffa" width="45%" />
+  <img src="https://github.com/user-attachments/assets/b412e6f7-ede4-43a7-9f05-b931a76e3d12" width="45%" />
+</p>
 
 ## Features
 
