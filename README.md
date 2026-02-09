@@ -1,143 +1,104 @@
-# VLC Capture Stream
+# Capture Stream
 
-A Bash script for low-latency capture card streaming on Linux/KDE. Designed for sharing capture card output via Discord screen share, since Discord's built-in capture is broken on Linux.
+Low-latency capture card viewer for Linux. Opens your capture card in a borderless, always-below VLC window — useful for Discord screen sharing, since Discord's built-in capture is broken on Linux.
+
 <p float="left">
-  <img src="https://github.com/user-attachments/assets/294310a4-d5e7-4a2d-ac44-b6654b89bffa" width="45%" />
-  <img src="https://github.com/user-attachments/assets/b412e6f7-ede4-43a7-9f05-b931a76e3d12" width="45%" />
+  <img src="https://github.com/user-attachments/assets/833fe4cb-3ee8-423c-9eaf-feaa3556ec30" width="30%" />
 </p>
 
 ## Features
 
-- **Auto device detection** - Automatically finds video and audio devices
-- **Dynamic resolution/FPS** - Only shows modes your card actually supports
-- **Temporary window rules** - Borderless, always-below window that cleans up on exit
-- **HDR compensation** - Brightness boost for HDR sources (no true HDR passthrough on Linux)
-- **Smart latency** - Auto-calculated buffer based on resolution, with manual override
-- **Remembers settings** - Saves your preferences for next time
+- Auto-detects V4L2 video and ALSA audio devices
+- Cascading dropdowns — device → format → resolution → FPS (filtered to Discord-supported values)
+- Session-aware window rules (KDE Wayland, X11, Wayland fallback) with DPI scaling support
+- Brightness/contrast sliders with SDR/HDR presets
+- Latency slider (20–60 ms)
+- Settings persist between sessions
 
 ## Supported Capture Cards
 
-Tested with Elgato HD60 X, but should work with any V4L2-compatible capture card:
-
-- Elgato (HD60, 4K60, Cam Link, etc.)
-- AVerMedia
-- Magewell
-- Blackmagic
-- Most USB/PCIe capture cards with Linux drivers
-
-## Requirements
-
-- **OS:** Linux (tested on Fedora 41+)
-- **Desktop:** KDE Plasma 6
-- **Display:** Wayland or X11
-
-### Dependencies
-```bash
-# Fedora
-sudo dnf install v4l-utils zenity vlc
-
-# Ubuntu/Debian
-sudo apt install v4l-utils zenity vlc
-
-# Arch
-sudo pacman -S v4l-utils zenity vlc
-```
+Tested with Elgato HD60 X, but works with any UVC-compatible capture card (Elgato, AVerMedia, Magewell, Blackmagic, etc). If your card's audio isn't detected by the known-device filter, all ALSA capture devices are shown as a fallback.
 
 ## Installation
 
-1. Download and make executable:
 ```bash
-chmod +x capture-stream.sh
+chmod +x capture-stream-install.sh
+./capture-stream-install.sh
 ```
 
-2. (Optional) Install to local bin:
+You can also double-click the installer from your file manager. To uninstall: `./capture-stream-install.sh --uninstall`
+
+### Dependencies
+
 ```bash
-mkdir -p ~/.local/bin
-cp capture-stream.sh ~/.local/bin/
+# Fedora / Nobara / Bazzite
+sudo dnf install v4l-utils vlc alsa-utils pulseaudio-utils python3-gobject
+
+# Ubuntu / Debian / Mint / Pop
+sudo apt install v4l-utils vlc alsa-utils pulseaudio-utils python3-gi
+
+# Arch / Manjaro / CachyOS
+sudo pacman -S v4l-utils vlc alsa-utils libpulse python-gobject
 ```
 
-3. (Optional) Create desktop entry:
-```bash
-cat > ~/.local/share/applications/capture-stream.desktop << 'EOF'
-[Desktop Entry]
-Type=Application
-Name=Capture Stream
-Comment=Capture Card Viewer
-Exec=/home/YOUR_USERNAME/.local/bin/capture-stream.sh
-Icon=camera-video
-Terminal=false
-Categories=AudioVideo;Video;
-EOF
-```
-
-Replace `YOUR_USERNAME` with your actual username, then:
-```bash
-chmod +x ~/.local/share/applications/capture-stream.desktop
-kbuildsycoca6
-```
+Additional session-specific deps (`wmctrl` on X11, `kreadconfig6`/`qdbus-qt6` or `qdbus6` on KDE Wayland) are detected and prompted by the installer.
 
 ## Usage
 
 1. Connect your capture card
-2. Run the script
-3. Select your settings:
-   - **Video Device** - Your capture card
-   - **Audio Device** - Capture card audio input
-   - **Resolution** - 720p / 1080p / 1440p / 4K (device-dependent)
-   - **Color Space** - SDR or HDR (brightness boost)
-   - **Extra Buffer** - Enable if experiencing stuttering
-4. Select framerate (only valid options shown)
-5. VLC opens with your capture feed
-6. Share the VLC window in Discord
+2. Launch **Capture Stream** from your app menu or run `capture-stream`
+3. Select your devices, format, resolution, and framerate
+4. Adjust brightness/contrast if needed (HDR preset for HDR sources)
+5. Set latency and click **Start Stream**
+6. Close VLC to return to settings
 
-## Configuration
+### Volume
 
-Settings are saved to `~/.config/capture-stream/config` and restored on next launch.
+Adjust capture card volume through your DE's volume mixer — look for the VLC stream under playback or recording.
 
 ### Latency
 
-Buffer is auto-calculated:
-- **720p-1440p:** 20ms
-- **4K:** 40ms
-- **Extra Buffer:** +20ms
+Controls VLC's live-caching buffer, mainly affects audio lag.
 
-Enable "Extra Buffer" if you see stuttering or `buffer deadlock` errors.
+| Preset | Value | Use case |
+|--------|-------|----------|
+| Low | 20 ms | Least audio lag, may stutter at 4K |
+| Medium | 40 ms | Good balance, recommended for 4K |
+| High | 60 ms | Smoothest audio, for problematic setups |
 
-### HDR Mode
+### HDR
 
-HDR passthrough isn't available on Linux. The HDR option applies a brightness/contrast boost to compensate for dim HDR sources:
-- Contrast: 1.15
-- Brightness: 1.1
-
-### Window Behavior
-
-The script creates a temporary KDE window rule that:
-- Removes window borders
-- Positions at top-left (0,0)
-- Sets window to always-below
-- Matches exact capture resolution
-
-The rule is automatically removed when VLC closes.
+HDR passthrough isn't available on Linux. The HDR preset adjusts brightness/contrast to compensate for dim HDR sources on SDR displays.
 
 ## Troubleshooting
 
-### No video devices found
-- Check if your capture card is connected: `v4l2-ctl --list-devices`
-- Ensure drivers are loaded: `lsusb` or `lspci`
+### No devices found
+- Video: `v4l2-ctl --list-devices` — Audio: `arecord -l`
+- Try the ↻ Refresh button after plugging in
 
-### No audio devices found
-- Check ALSA devices: `arecord -l`
-- The script filters for capture card audio; your card may need to be added to the filter
+### VLC fails to start
+- Error dialog shows exit code and last lines of output
+- Common causes: device busy, invalid resolution/format combo, missing PulseAudio
 
-### Stuttering / Frame drops
-- Enable "Extra Buffer" option
-- Try a lower resolution or framerate
-- Check USB bandwidth (use USB 3.0 port, avoid hubs)
+### Stuttering
+- Increase latency, lower resolution/framerate, use USB 3.0
+
+### Stream pauses when minimized
+- **KDE Wayland**: handled automatically — the window rule blocks minimization
+- **X11 / other Wayland**: VLC stops rendering when minimized. Avoid minimizing the stream window; it stays below other windows so it won't be in the way
 
 ### Window has borders / wrong size
-- Ensure KDE Plasma 6 is running
-- Check if `kwriteconfig6` and `qdbus-qt6` are available
-- Try restarting KWin: `kwin_wayland --replace` or log out/in
+- KDE Wayland: needs `kreadconfig6` and `qdbus-qt6`
+- X11: needs `wmctrl`
+- Other Wayland: window rules not supported, VLC opens normally
+
+### Wrong size with display scaling
+- KDE Wayland: scale is read from `~/.config/kwinoutputconfig.json` — check it exists and has your scale value
+- Falls back to `QT_SCALE_FACTOR` / `GDK_SCALE` env vars
+
+## Configuration
+
+Settings saved to `~/.config/capture-stream/config.ini`.
 
 ## AI Disclaimer
-This script was made with AI assistance.
+This project was made with AI assistance.
