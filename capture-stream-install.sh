@@ -9,7 +9,6 @@ trap 'gui_error "Installation failed unexpectedly.\nCheck terminal output for de
 APP_NAME="capture-stream"
 APP_LABEL="Capture Stream"
 INSTALL_DIR="$HOME/.local/bin"
-ICON_DIR="$HOME/.local/share/icons"
 DESKTOP_DIR="$HOME/.local/share/applications"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -106,12 +105,8 @@ get_pkg_name() {
     local family
     family=$(get_distro_family)
     case "$cmd:$family" in
-        pactl:fedora)          echo "pulseaudio-utils" ;;
-        pactl:debian)          echo "pulseaudio-utils" ;;
         pactl:arch)            echo "libpulse" ;;
-        pactl:suse)            echo "pulseaudio-utils" ;;
-        kreadconfig6:arch)     echo "kconfig" ;;
-        kreadconfig6:*)        echo "kf6-kconfig" ;;
+        pactl:*)               echo "pulseaudio-utils" ;;
         qdbus:fedora)          echo "qt6-qttools" ;;
         qdbus:debian)          echo "qdbus-qt6" ;;
         qdbus:arch)            echo "qt6-tools" ;;
@@ -143,7 +138,7 @@ check_deps() {
 
     case "${session_type,,}:${desktop^^}" in
         wayland:*KDE*)
-            cmds+=(kreadconfig6 qdbus)
+            cmds+=(qdbus)
             ;;
         x11:*)
             cmds+=(wmctrl)
@@ -210,7 +205,7 @@ install() {
         exit 1
     fi
 
-    mkdir -p "$INSTALL_DIR" "$ICON_DIR" "$DESKTOP_DIR"
+    mkdir -p "$INSTALL_DIR" "$DESKTOP_DIR"
 
     cp "$SCRIPT_DIR/capture-stream.py" "$INSTALL_DIR/$APP_NAME"
     chmod +x "$INSTALL_DIR/$APP_NAME"
@@ -220,26 +215,20 @@ install() {
         exit 1
     fi
 
-    local icon_name="camera-video"
-    if [[ -f "$SCRIPT_DIR/capture-stream.png" ]]; then
-        cp "$SCRIPT_DIR/capture-stream.png" "$ICON_DIR/$APP_NAME.png"
-        icon_name="$APP_NAME"
-    fi
-
     cat > "$DESKTOP_DIR/$APP_NAME.desktop" << EOF
 [Desktop Entry]
 Name=Capture Stream
 Comment=Low-latency capture card viewer
 Exec=$INSTALL_DIR/$APP_NAME
-Icon=$icon_name
+Icon=camera-video
 Terminal=false
 Type=Application
 Categories=AudioVideo;Video;
 Keywords=capture;card;v4l2;vlc;hdmi;
 EOF
 
-    command -v update-desktop-database &>/dev/null && \
-        update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
+    update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
+    kbuildsycoca6 --noincremental 2>/dev/null || true
 
     local path_note=""
     if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
@@ -259,12 +248,11 @@ uninstall() {
     fi
 
     rm -f "$INSTALL_DIR/$APP_NAME"
-    rm -f "$ICON_DIR/$APP_NAME.png"
     rm -f "$DESKTOP_DIR/$APP_NAME.desktop"
     rm -rf "$HOME/.config/capture-stream"
 
-    command -v update-desktop-database &>/dev/null && \
-        update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
+    update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
+    kbuildsycoca6 --noincremental 2>/dev/null || true
 
     gui_info "$APP_LABEL has been removed."
 }
