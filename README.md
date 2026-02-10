@@ -41,7 +41,7 @@ sudo apt install v4l-utils vlc alsa-utils pulseaudio-utils python3-gi
 sudo pacman -S v4l-utils vlc alsa-utils libpulse python-gobject
 ```
 
-Additional session-specific deps (`wmctrl` on X11, `kreadconfig6`/`qdbus-qt6` or `qdbus6` on KDE Wayland) are detected and prompted by the installer.
+Additional session-specific deps (`wmctrl` on X11, `qdbus-qt6` or `qdbus6` on KDE Wayland) are detected and reported by the installer.
 
 ## Usage
 
@@ -88,7 +88,7 @@ HDR passthrough isn't available on Linux. The HDR preset adjusts brightness/cont
 - **X11 / other Wayland**: VLC stops rendering when minimized. Avoid minimizing the stream window; it stays below other windows so it won't be in the way
 
 ### Window has borders / wrong size
-- KDE Wayland: needs `kreadconfig6` and `qdbus-qt6`
+- KDE Wayland: needs `qdbus-qt6` (or `qdbus6` on Arch)
 - X11: needs `wmctrl`
 - Other Wayland: window rules not supported, VLC opens normally
 
