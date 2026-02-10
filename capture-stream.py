@@ -12,12 +12,11 @@ from pathlib import Path
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GLib, GdkPixbuf
+from gi.repository import Gtk, Gdk, GLib
 
 APP_NAME = "Capture Stream"
 CONFIG_DIR = Path.home() / ".config" / "capture-stream"
 CONFIG_FILE = CONFIG_DIR / "config.ini"
-ICON_PATH = Path.home() / ".local/share/icons/capture-stream.png"
 DISCORD_RESOLUTIONS = {"3840x2160", "2560x1440", "1920x1080", "1280x720", "854x480", "640x480"}
 DISCORD_FPS = {15, 30, 60}
 
@@ -59,22 +58,18 @@ def _detect_distro_family():
             return family
     return None
 
-# Package names per distro family: {command: {family: package, ...}}
-_PKG_MAP = {
-    "v4l2-ctl":      {"fedora": "v4l-utils", "debian": "v4l-utils",
-                       "arch": "v4l-utils", "suse": "v4l-utils"},
-    "vlc":           {"fedora": "vlc", "debian": "vlc",
-                       "arch": "vlc", "suse": "vlc"},
-    "arecord":       {"fedora": "alsa-utils", "debian": "alsa-utils",
-                       "arch": "alsa-utils", "suse": "alsa-utils"},
+# Packages that are the same name everywhere
+_UNIVERSAL_PKGS = {
+    "v4l2-ctl": "v4l-utils", "vlc": "vlc",
+    "arecord": "alsa-utils", "wmctrl": "wmctrl",
+}
+
+# Packages that differ per distro family
+_DISTRO_PKGS = {
     "pactl":         {"fedora": "pulseaudio-utils", "debian": "pulseaudio-utils",
                        "arch": "libpulse", "suse": "pulseaudio-utils"},
-    "kreadconfig6":  {"fedora": "kf6-kconfig", "debian": "kf6-config",
-                       "arch": "kconfig", "suse": "kf6-kconfig"},
     "qdbus":         {"fedora": "qt6-qttools", "debian": "qdbus-qt6",
                        "arch": "qt6-tools", "suse": "qt6-tools-qdbus"},
-    "wmctrl":        {"fedora": "wmctrl", "debian": "wmctrl",
-                       "arch": "wmctrl", "suse": "wmctrl"},
 }
 
 _INSTALL_PREFIX = {
@@ -101,7 +96,7 @@ def check_dependencies():
     family = _detect_distro_family()
     checks = ["v4l2-ctl", "vlc", "arecord", "pactl"]
     if session == "wayland" and "KDE" in desktop:
-        checks += ["kreadconfig6", "qdbus"]
+        checks.append("qdbus")
     elif session == "x11":
         checks.append("wmctrl")
 
@@ -118,10 +113,12 @@ def check_dependencies():
 
     missing_pkgs = []
     for cmd in missing_cmds:
-        if family and family in _PKG_MAP.get(cmd, {}):
-            missing_pkgs.append(_PKG_MAP[cmd][family])
+        if cmd in _UNIVERSAL_PKGS:
+            missing_pkgs.append(_UNIVERSAL_PKGS[cmd])
+        elif family and family in _DISTRO_PKGS.get(cmd, {}):
+            missing_pkgs.append(_DISTRO_PKGS[cmd][family])
         else:
-            missing_pkgs.append(_PKG_MAP.get(cmd, {}).get("fedora", cmd))
+            missing_pkgs.append(cmd)
     return sorted(set(missing_pkgs))
 
 def get_install_hint(packages):
@@ -131,11 +128,6 @@ def get_install_hint(packages):
     return None
 
 def find_icon():
-    if ICON_PATH.exists():
-        try:
-            return GdkPixbuf.Pixbuf.new_from_file(str(ICON_PATH))
-        except Exception:
-            pass
     try:
         return Gtk.IconTheme.get_default().load_icon("camera-video", 64, 0)
     except Exception:
@@ -270,12 +262,15 @@ def _get_display_scale():
             pass
         # kdeglobals fallback
         try:
-            r = subprocess.run(["kreadconfig6", "--file", "kdeglobals",
-                                "--group", "KScreen", "--key", "ScaleFactor"],
-                               capture_output=True, text=True)
-            if r.returncode == 0 and r.stdout.strip():
-                return float(r.stdout.strip())
-        except (ValueError, FileNotFoundError):
+            kglobals = Path.home() / ".config/kdeglobals"
+            if kglobals.exists():
+                cp = configparser.ConfigParser()
+                cp.optionxform = str
+                cp.read(str(kglobals))
+                val = cp.get("KScreen", "ScaleFactor", fallback="")
+                if val:
+                    return float(val)
+        except (ValueError, OSError):
             pass
     for var in ("QT_SCALE_FACTOR", "GDK_SCALE"):
         val = os.environ.get(var)
