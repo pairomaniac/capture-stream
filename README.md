@@ -38,7 +38,7 @@ sudo dnf install v4l-utils vlc alsa-utils pulseaudio-utils python3-gobject
 sudo apt install v4l-utils vlc alsa-utils pulseaudio-utils python3-gi
 
 # Arch / Manjaro / CachyOS
-sudo pacman -S v4l-utils vlc alsa-utils libpulse python-gobject
+sudo pacman -S v4l-utils vlc vlc-plugin-zvbi zvbi vlc-plugin-ffmpeg alsa-utils libpulse python-gobject
 ```
 
 Additional session-specific deps (`wmctrl` on X11, `qdbus-qt6` or `qdbus6` on KDE Wayland) are detected and reported by the installer.
@@ -79,6 +79,7 @@ HDR passthrough isn't available on Linux. The HDR preset adjusts brightness/cont
 ### VLC fails to start
 - Error dialog shows exit code and last lines of output
 - Common causes: device busy, invalid resolution/format combo, missing PulseAudio
+- **Arch Linux**: if VLC logs `no access modules matched` or fails with MJPG, install `vlc-plugin-zvbi zvbi vlc-plugin-ffmpeg` — Arch splits these from the base VLC package
 
 ### Stuttering
 - Increase latency, lower resolution/framerate, use USB 3.0
