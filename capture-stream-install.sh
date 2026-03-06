@@ -166,6 +166,16 @@ check_deps() {
         fi
     fi
 
+    # Arch splits VLC plugins into separate packages
+    if [[ "$(get_distro_family)" == "arch" ]] && command -v pacman &>/dev/null && command -v vlc &>/dev/null; then
+        for pkg in vlc-plugin-zvbi zvbi vlc-plugin-ffmpeg; do
+            if ! pacman -Q "$pkg" &>/dev/null; then
+                missing+=("$pkg")
+                missing_pkgs+=("$pkg")
+            fi
+        done
+    fi
+
     if [[ ${#missing[@]} -gt 0 ]]; then
         local unique_pkgs=()
         mapfile -t unique_pkgs < <(printf '%s\n' "${missing_pkgs[@]}" | sort -u)
