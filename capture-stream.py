@@ -194,12 +194,13 @@ def get_video_devices():
 
 def get_audio_devices():
     known_cards = re.compile(
-        r"Elgato|Game Capture|Cam Link|Live Gamer|Magewell|USB Capture|"
-        r"Blackmagic|Intensity|DeckLink|HDMI.*In|SDI",
+        r"Elgato|Game Capture|Cam Link|AVerMedia|Live Gamer|"
+        r"Magewell|USB Capture|EVGA|XR1|NZXT|Signal\s*HD|"
+        r"Razer|Ripsaw|Genki|ShadowCast|"
+        r"Mirabox|ClonerAlliance|ACASIS|NearStream",
         re.I)
     pat = re.compile(r"card\s+(\d+):\s+\w+\s+\[([^\]]+)\]")
-    devices = []
-    all_devices = []
+    capture, other = [], []
     seen_hw = set()
     for line in _run(["arecord", "-l"]).splitlines():
         m = pat.search(line)
@@ -208,10 +209,11 @@ def get_audio_devices():
         if hw in seen_hw: continue
         seen_hw.add(hw)
         entry = (m.group(2), hw)
-        all_devices.append(entry)
         if known_cards.search(line):
-            devices.append(entry)
-    return devices if devices else all_devices
+            capture.append(entry)
+        else:
+            other.append(entry)
+    return capture + other
 
 def _parse_formats_ext(device):
     modes = {}
