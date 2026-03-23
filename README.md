@@ -17,7 +17,7 @@ Low-latency capture card viewer for Linux. Opens your capture card in a borderle
 
 ## Supported Capture Cards
 
-Tested with Elgato HD60 X, but works with any UVC-compatible capture card (Elgato, AVerMedia, Magewell, Blackmagic, etc). If your card's audio isn't detected by the known-device filter, all ALSA capture devices are shown as a fallback.
+Tested with Elgato HD60 X, but works with any UVC-compatible capture card (Elgato, AVerMedia, Magewell, etc). If your card's audio isn't detected by the known-device filter, all ALSA capture devices are shown as a fallback.
 
 ## Installation
 
