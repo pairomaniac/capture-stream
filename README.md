@@ -1,5 +1,10 @@
 # Capture Stream
 
+> [!IMPORTANT]  
+> **[Discord has fixed](https://www.reddit.com/r/discordapp/comments/1snij38/comment/oj8isyj)** capture card streaming on Linux in **version 0.0.135!**
+>
+> I consider this project now obsolete and I'm archiving this repository.
+
 Low-latency capture card viewer for Linux. Opens your capture card in a borderless, always-below VLC window — useful for Discord screen sharing, since Discord's built-in capture is broken on Linux.
 
 <p float="left">
